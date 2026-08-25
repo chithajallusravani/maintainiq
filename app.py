@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 import plotly.express as px
-from tensorflow.keras.models import load_model
+import tensorflow as tf
 
 
 # ============================================================
@@ -183,19 +183,44 @@ def model_paths():
 @st.cache_resource(show_spinner=False)
 def load_models():
     paths = model_paths()
-    missing = [MODEL_FILES[k] for k, v in paths.items() if v is None]
+
+    missing = [
+        MODEL_FILES[k]
+        for k, v in paths.items()
+        if v is None
+    ]
+
     if missing:
         raise FileNotFoundError(
             "Missing deployment files: " + ", ".join(missing)
         )
 
     return {
-        "preprocessor": joblib.load(paths["preprocessor"]),
-        "failure": load_model(paths["failure"], compile=False),
-        "failure_type": joblib.load(paths["failure_type"]),
-        "encoder": joblib.load(paths["encoder"]),
-        "rul": joblib.load(paths["rul"]),
-        "repair_cost": joblib.load(paths["repair_cost"]),
+        "preprocessor": joblib.load(
+            paths["preprocessor"]
+        ),
+
+        "failure": tf.keras.models.load_model(
+            paths["failure"],
+            compile=False
+        ),
+
+        "failure_type": joblib.load(
+            paths["failure_type"]
+        ),
+
+        "encoder": joblib.load(
+            paths["encoder"]
+        ),
+
+        "rul": joblib.load(
+            paths["rul"]
+        ),
+
+        "repair_cost": joblib.load(
+            paths["repair_cost"]
+        ),
+
         "paths": paths,
     }
 
