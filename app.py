@@ -1,4 +1,13 @@
 import os
+
+# ============================================================
+# CPU-ONLY TENSORFLOW CONFIG
+# Must be set BEFORE importing TensorFlow
+# ============================================================
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+
 from pathlib import Path
 from datetime import datetime
 
@@ -7,7 +16,8 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 import plotly.express as px
-from tensorflow.keras.models import load_model
+
+
 
 
 # ============================================================
@@ -182,8 +192,13 @@ def model_paths():
 
 @st.cache_resource(show_spinner=False)
 def load_models():
+    # Import TensorFlow only when ML models are actually required.
+    from tensorflow.keras.models import load_model
+
     paths = model_paths()
+
     missing = [MODEL_FILES[k] for k, v in paths.items() if v is None]
+
     if missing:
         raise FileNotFoundError(
             "Missing deployment files: " + ", ".join(missing)
