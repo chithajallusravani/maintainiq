@@ -8,27 +8,22 @@ import pandas as pd
 import streamlit as st
 import plotly.express as px
 import tensorflow as tf
-from scipy import sparse
 
 
 # ============================================================
 # MAINTAINIQ - FINAL DEPLOYMENT APP
-# Streamlit 1.60.0 compatible
+# Streamlit 1.60.0
 #
 # Login:
 # Username: admin
 # Password: maintainiq
 #
-# ML LOGIC:
-# Failure Prediction -> MLP
-# Failure Type       -> Balanced Extra Trees
-# RUL                -> XGBoost
-# Repair Cost        -> Random Forest
+# ML LOGIC IS PRESERVED
 # ============================================================
 
 
 # ============================================================
-# PAGE CONFIG
+# STREAMLIT CONFIG
 # ============================================================
 
 st.set_page_config(
@@ -40,7 +35,7 @@ st.set_page_config(
 
 
 # ============================================================
-# APPLICATION CONFIG
+# APP CONFIG
 # ============================================================
 
 APP_USERNAME = "admin"
@@ -48,7 +43,7 @@ APP_PASSWORD = "maintainiq"
 
 
 # ============================================================
-# DEPLOYMENT ARTIFACTS
+# MODEL FILES
 # ============================================================
 
 MODEL_FILES = {
@@ -84,7 +79,7 @@ MODEL_INPUT_FEATURES = [
 
 
 # ============================================================
-# INPUT OPTIONS
+# CATEGORICAL OPTIONS
 # ============================================================
 
 MACHINE_TYPES = [
@@ -141,16 +136,9 @@ WINNERS = {
 # ============================================================
 
 FALLBACKS = {
-
     "failure": pd.DataFrame(
         [
-            [
-                "MLP",
-                0.780890,
-                np.nan,
-                np.nan,
-                "🏆 Selected",
-            ],
+            ["MLP", 0.780890, np.nan, np.nan, "🏆 Selected"],
         ],
         columns=[
             "Model",
@@ -163,30 +151,10 @@ FALLBACKS = {
 
     "failure_type": pd.DataFrame(
         [
-            [
-                "Balanced Extra Trees",
-                0.8007,
-                0.9561,
-                "🏆 Selected",
-            ],
-            [
-                "Balanced Subsample RF",
-                0.7142,
-                0.9507,
-                "",
-            ],
-            [
-                "Current Random Forest",
-                0.6823,
-                0.9511,
-                "",
-            ],
-            [
-                "Balanced Random Forest",
-                0.6729,
-                0.9509,
-                "",
-            ],
+            ["Balanced Extra Trees", 0.8007, 0.9561, "🏆 Selected"],
+            ["Balanced Subsample RF", 0.7142, 0.9507, ""],
+            ["Current Random Forest", 0.6823, 0.9511, ""],
+            ["Balanced Random Forest", 0.6729, 0.9509, ""],
         ],
         columns=[
             "Model",
@@ -198,13 +166,7 @@ FALLBACKS = {
 
     "rul": pd.DataFrame(
         [
-            [
-                "XGBoost",
-                9.2303,
-                13.2020,
-                0.7650,
-                "🏆 Selected",
-            ],
+            ["XGBoost", 9.2303, 13.2020, 0.7650, "🏆 Selected"],
         ],
         columns=[
             "Model",
@@ -217,13 +179,7 @@ FALLBACKS = {
 
     "repair": pd.DataFrame(
         [
-            [
-                "Random Forest",
-                286.8328,
-                572.4620,
-                0.5540,
-                "🏆 Selected",
-            ],
+            ["Random Forest", 286.8328, 572.4620, 0.5540, "🏆 Selected"],
         ],
         columns=[
             "Model",
@@ -244,230 +200,220 @@ BASE_DIR = Path(__file__).resolve().parent
 
 
 # ============================================================
-# CUSTOM UI
+# CUSTOM CSS
 # ============================================================
 
 st.markdown(
     """
-    <style>
+<style>
 
-    .stApp{
-        background:
-        radial-gradient(
-            circle at 8% 4%,
-            rgba(59,130,246,.10),
-            transparent 26%
-        ),
-        radial-gradient(
-            circle at 92% 2%,
-            rgba(139,92,246,.10),
-            transparent 25%
-        ),
-        #f5f7fb;
-    }
+.stApp{
+    background:
+    radial-gradient(
+        circle at 8% 4%,
+        rgba(59,130,246,.10),
+        transparent 26%
+    ),
+    radial-gradient(
+        circle at 92% 2%,
+        rgba(139,92,246,.10),
+        transparent 25%
+    ),
+    #f5f7fb;
+}
 
-    .block-container{
-        max-width:1500px;
-        padding-top:1.2rem;
-        padding-bottom:2rem;
-    }
+.block-container{
+    max-width:1500px;
+    padding-top:1.2rem;
+    padding-bottom:2rem;
+}
 
-    [data-testid="stSidebar"]{
-        background:
-        linear-gradient(
-            180deg,
-            #0b1220 0%,
-            #111b31 52%,
-            #172554 100%
-        );
-    }
+[data-testid="stSidebar"]{
+    background:
+    linear-gradient(
+        180deg,
+        #0b1220 0%,
+        #111b31 52%,
+        #172554 100%
+    );
+}
 
-    [data-testid="stSidebar"] .stButton>button{
-        width:100%;
-        min-height:43px;
-        border-radius:12px;
-        background:rgba(255,255,255,.035);
-        border:1px solid rgba(255,255,255,.08);
-        color:#e5edff;
-        font-weight:700;
-        text-align:left;
-    }
+[data-testid="stSidebar"] .stButton>button{
+    width:100%;
+    min-height:43px;
+    border-radius:12px;
+    background:rgba(255,255,255,.035);
+    border:1px solid rgba(255,255,255,.08);
+    color:#e5edff;
+    font-weight:700;
+    text-align:left;
+}
 
-    [data-testid="stSidebar"] .stButton>button:hover{
-        background:
-        linear-gradient(
-            90deg,
-            rgba(37,99,235,.30),
-            rgba(124,58,237,.25)
-        );
-        color:white;
-    }
+[data-testid="stSidebar"] .stButton>button:hover{
+    background:
+    linear-gradient(
+        90deg,
+        rgba(37,99,235,.30),
+        rgba(124,58,237,.25)
+    );
+    color:white;
+}
 
-    .page-title{
-        font-size:34px;
-        font-weight:850;
-        color:#10234f;
-        letter-spacing:-1px;
-    }
+.page-title{
+    font-size:34px;
+    font-weight:850;
+    color:#10234f;
+    letter-spacing:-1px;
+}
 
-    .page-subtitle{
-        font-size:15px;
-        color:#64748b;
-        margin-bottom:20px;
-    }
+.page-subtitle{
+    font-size:15px;
+    color:#64748b;
+    margin-bottom:20px;
+}
 
-    .hero{
-        padding:30px;
-        border-radius:24px;
-        color:white;
-        background:
-        linear-gradient(
-            135deg,
-            #2563eb,
-            #4f46e5 55%,
-            #8b5cf6
-        );
-        box-shadow:
-        0 18px 45px rgba(37,99,235,.22);
-    }
+.hero{
+    padding:30px;
+    border-radius:24px;
+    color:white;
+    background:
+    linear-gradient(
+        135deg,
+        #2563eb,
+        #4f46e5 55%,
+        #8b5cf6
+    );
+    box-shadow:
+    0 18px 45px rgba(37,99,235,.22);
+}
 
-    .hero h1{
-        margin:0 0 8px;
-        font-size:32px;
-    }
+.hero h1{
+    margin:0 0 8px;
+    font-size:32px;
+}
 
-    .hero p{
-        margin:0;
-        color:rgba(255,255,255,.90);
-        line-height:1.65;
-    }
+.hero p{
+    margin:0;
+    color:rgba(255,255,255,.90);
+    line-height:1.65;
+}
 
-    .card{
-        background:white;
-        border:1px solid #e2e8f0;
-        border-radius:20px;
-        padding:22px;
-        box-shadow:
-        0 8px 28px rgba(15,23,42,.06);
-    }
+.card{
+    background:white;
+    border:1px solid #e2e8f0;
+    border-radius:20px;
+    padding:22px;
+    box-shadow:
+    0 8px 28px rgba(15,23,42,.06);
+}
 
-    .winner{
-        padding:14px;
-        border-radius:15px;
-        margin-bottom:9px;
-        border:1px solid #dbeafe;
-        background:
-        linear-gradient(
-            135deg,
-            #eff6ff,
-            #f5f3ff
-        );
-    }
+.winner{
+    padding:14px;
+    border-radius:15px;
+    margin-bottom:9px;
+    border:1px solid #dbeafe;
+    background:
+    linear-gradient(
+        135deg,
+        #eff6ff,
+        #f5f3ff
+    );
+}
 
-    .small{
-        color:#64748b;
-        font-size:12px;
-    }
+.small{
+    color:#64748b;
+    font-size:12px;
+}
 
-    .pred{
-        background:white;
-        border:1px solid #e2e8f0;
-        border-radius:20px;
-        padding:20px;
-        min-height:155px;
-        box-shadow:
-        0 8px 25px rgba(15,23,42,.06);
-    }
+.pred{
+    background:white;
+    border:1px solid #e2e8f0;
+    border-radius:20px;
+    padding:20px;
+    min-height:155px;
+    box-shadow:
+    0 8px 25px rgba(15,23,42,.06);
+}
 
-    .pred-icon{
-        font-size:27px;
-    }
+.pred-icon{
+    font-size:27px;
+}
 
-    .pred-label{
-        color:#64748b;
-        font-size:12px;
-        font-weight:800;
-        margin-top:8px;
-    }
+.pred-label{
+    color:#64748b;
+    font-size:12px;
+    font-weight:800;
+    margin-top:8px;
+}
 
-    .pred-value{
-        color:#0f172a;
-        font-size:25px;
-        font-weight:850;
-        margin-top:4px;
-    }
+.pred-value{
+    color:#0f172a;
+    font-size:25px;
+    font-weight:850;
+    margin-top:4px;
+}
 
-    .badge{
-        display:inline-block;
-        margin-top:8px;
-        padding:5px 10px;
-        border-radius:18px;
-        font-size:11px;
-        font-weight:800;
-    }
+.badge{
+    display:inline-block;
+    margin-top:8px;
+    padding:5px 10px;
+    border-radius:18px;
+    font-size:11px;
+    font-weight:800;
+}
 
-    .green{
-        background:#d1fae5;
-        color:#047857;
-    }
+.green{
+    background:#d1fae5;
+    color:#047857;
+}
 
-    .orange{
-        background:#fef3c7;
-        color:#b45309;
-    }
+.orange{
+    background:#fef3c7;
+    color:#b45309;
+}
 
-    .red{
-        background:#fee2e2;
-        color:#b91c1c;
-    }
+.red{
+    background:#fee2e2;
+    color:#b91c1c;
+}
 
-    .blue{
-        background:#dbeafe;
-        color:#1d4ed8;
-    }
+.blue{
+    background:#dbeafe;
+    color:#1d4ed8;
+}
 
-    footer{
-        visibility:hidden;
-    }
+footer{
+    visibility:hidden;
+}
 
-    </style>
-    """,
+</style>
+""",
     unsafe_allow_html=True,
 )
 
 
 # ============================================================
-# MODEL PATH SEARCH
+# FILE FINDER
 # ============================================================
 
 def find_file(filename):
     """
-    Search for a deployment artifact in common locations.
+    Finds deployment files.
 
-    Supported layouts:
-
-        repository/
-        ├── app.py
-        ├── models/
-        │   └── model files
-        │
-        OR
-        │
-        ├── maintainiq_models/
-        │   └── model files
-        │
-        OR
-        │
-        └── model files directly beside app.py
+    Priority:
+    1. Repository root
+    2. maintainiq_models/
+    3. models/
+    4. Current working directory
     """
 
     folders = [
+        BASE_DIR,
         BASE_DIR / "maintainiq_models",
         BASE_DIR / "models",
-        BASE_DIR,
+        Path.cwd(),
         Path.cwd() / "maintainiq_models",
         Path.cwd() / "models",
-        Path.cwd(),
     ]
 
     seen = set()
@@ -486,7 +432,7 @@ def find_file(filename):
 
         path = folder / filename
 
-        if path.is_file():
+        if path.exists() and path.is_file():
             return path
 
     return None
@@ -497,7 +443,6 @@ def find_file(filename):
 # ============================================================
 
 def model_paths():
-
     return {
         key: find_file(filename)
         for key, filename in MODEL_FILES.items()
@@ -505,47 +450,11 @@ def model_paths():
 
 
 # ============================================================
-# LOAD SINGLE MODEL
-# ============================================================
-
-def load_single_model(key, path):
-    """
-    Load each model using the correct serialization method.
-
-    .keras
-        TensorFlow/Keras
-
-    .pkl
-        joblib
-    """
-
-    if path is None:
-        raise FileNotFoundError(
-            f"Model file for '{key}' was not found."
-        )
-
-    path = Path(path)
-
-    # --------------------------------------------------------
-    # KERAS MLP FAILURE MODEL
-    # --------------------------------------------------------
-
-    if key == "failure":
-
-        return tf.keras.models.load_model(
-            path,
-            compile=False,
-        )
-
-    # --------------------------------------------------------
-    # SKLEARN / XGBOOST / ENCODER / PREPROCESSOR
-    # --------------------------------------------------------
-
-    return joblib.load(path)
-
-
-# ============================================================
-# LOAD ALL MODELS
+# MODEL LOADING
+#
+# IMPORTANT:
+# .keras -> tf.keras.models.load_model()
+# .pkl   -> joblib.load()
 # ============================================================
 
 @st.cache_resource(show_spinner=False)
@@ -553,79 +462,112 @@ def load_models():
 
     paths = model_paths()
 
+    # --------------------------------------------------------
+    # Check missing files
+    # --------------------------------------------------------
+
     missing = []
 
     for key, path in paths.items():
 
         if path is None:
+            missing.append(MODEL_FILES[key])
 
-            missing.append(
-                MODEL_FILES[key]
-            )
-
-    # --------------------------------------------------------
-    # MISSING ARTIFACTS
-    # --------------------------------------------------------
+        elif not os.path.exists(path):
+            missing.append(MODEL_FILES[key])
 
     if missing:
 
-        st.error(
-            "❌ Missing deployment files"
-        )
+        st.error("❌ Missing deployment files")
 
         for filename in missing:
-
-            st.write(
-                f"- `{filename}`"
-            )
-
-        st.warning(
-            "Make sure all six deployment artifacts are "
-            "committed to GitHub inside the repository."
-        )
+            st.write(f"- `{filename}`")
 
         st.info(
-            "Supported locations: repository root, "
-            "`models/`, or `maintainiq_models/`."
+            "Make sure all six model files are committed "
+            "to the same GitHub repository as app.py."
         )
 
         return None
 
     # --------------------------------------------------------
-    # LOAD
+    # Load models
     # --------------------------------------------------------
-
-    loaded = {}
 
     try:
 
-        for key, path in paths.items():
+        models = {}
 
-            loaded[key] = load_single_model(
-                key,
-                path,
-            )
+        # ====================================================
+        # 1. PREPROCESSOR
+        # ====================================================
 
-        return loaded
+        models["preprocessor"] = joblib.load(
+            paths["preprocessor"]
+        )
+
+        # ====================================================
+        # 2. FAILURE MODEL
+        #
+        # .keras MUST NOT use joblib.load()
+        # ====================================================
+
+        models["failure"] = tf.keras.models.load_model(
+            paths["failure"],
+            compile=False,
+        )
+
+        # ====================================================
+        # 3. FAILURE TYPE MODEL
+        # ====================================================
+
+        models["failure_type"] = joblib.load(
+            paths["failure_type"]
+        )
+
+        # ====================================================
+        # 4. FAILURE TYPE ENCODER
+        # ====================================================
+
+        models["encoder"] = joblib.load(
+            paths["encoder"]
+        )
+
+        # ====================================================
+        # 5. RUL MODEL
+        # ====================================================
+
+        models["rul"] = joblib.load(
+            paths["rul"]
+        )
+
+        # ====================================================
+        # 6. REPAIR COST MODEL
+        # ====================================================
+
+        models["repair_cost"] = joblib.load(
+            paths["repair_cost"]
+        )
+
+        return models
 
     except Exception as exc:
 
-        st.error(
-            "❌ Model loading failed."
-        )
-
-        st.error(
-            "One of the saved deployment artifacts "
-            "could not be loaded."
-        )
+        st.error("❌ Model loading failed")
 
         st.exception(exc)
+
+        st.warning(
+            "Check that the model artifacts were created with "
+            "compatible Python, TensorFlow, scikit-learn and "
+            "XGBoost versions."
+        )
 
         return None
 
 
 # ============================================================
-# INITIAL MODEL LOAD
+# LOAD MODELS ONCE
 # ============================================================
 
 models = load_models()
@@ -645,11 +587,9 @@ SESSION_DEFAULTS = {
     "last_prediction": None,
 }
 
-
 for key, default in SESSION_DEFAULTS.items():
 
     if key not in st.session_state:
-
         st.session_state[key] = default
 
 
@@ -664,9 +604,7 @@ def login_page():
         unsafe_allow_html=True,
     )
 
-    _, center, _ = st.columns(
-        [1, 1.15, 1]
-    )
+    _, center, _ = st.columns([1, 1.15, 1])
 
     with center:
 
@@ -746,10 +684,8 @@ def login_page():
             ):
 
                 if (
-                    username.strip().lower()
-                    == APP_USERNAME
-                    and password
-                    == APP_PASSWORD
+                    username.strip().lower() == APP_USERNAME
+                    and password == APP_PASSWORD
                 ):
 
                     st.session_state.authenticated = True
@@ -758,7 +694,6 @@ def login_page():
                     st.rerun()
 
                 else:
-
                     st.error(
                         "Invalid username or password."
                     )
@@ -769,7 +704,7 @@ def login_page():
 
 
 # ============================================================
-# LOGIN CHECK
+# AUTHENTICATION
 # ============================================================
 
 if not st.session_state.authenticated:
@@ -939,6 +874,8 @@ with st.sidebar:
 
             st.rerun()
 
+    st.markdown("<br>", unsafe_allow_html=True)
+
     if st.button(
         "🚪   Logout",
         key="logout",
@@ -959,10 +896,14 @@ with st.sidebar:
 
 def expected_features():
 
-    pre = models["preprocessor"]
+    preprocessor = models["preprocessor"]
+
+    # --------------------------------------------------------
+    # Preferred method
+    # --------------------------------------------------------
 
     names = getattr(
-        pre,
+        preprocessor,
         "feature_names_in_",
         None,
     )
@@ -974,11 +915,15 @@ def expected_features():
             for x in names
         ]
 
+    # --------------------------------------------------------
+    # ColumnTransformer fallback
+    # --------------------------------------------------------
+
     found = []
 
     try:
 
-        for _, _, columns in pre.transformers_:
+        for _, _, columns in preprocessor.transformers_:
 
             if isinstance(
                 columns,
@@ -996,20 +941,20 @@ def expected_features():
                 )
 
     except Exception:
-
         pass
 
-    if found:
+    found = list(
+        dict.fromkeys(found)
+    )
 
-        return list(
-            dict.fromkeys(found)
-        )
+    if found:
+        return found
 
     return MODEL_INPUT_FEATURES.copy()
 
 
 # ============================================================
-# PREPARE MODEL INPUT
+# PREPARE INPUT
 # ============================================================
 
 def prepare_input(
@@ -1028,44 +973,32 @@ def prepare_input(
 
     values = {
 
-        "machine_id":
-            machine_id,
+        "machine_id": machine_id,
 
-        "machine_type":
-            machine_type,
+        "machine_type": machine_type,
 
-        "vibration_rms":
-            vibration_rms,
+        "vibration_rms": vibration_rms,
 
-        "temperature_motor":
-            temperature_motor,
+        "temperature_motor": temperature_motor,
 
-        "current_phase_avg":
-            current_phase_avg,
+        "current_phase_avg": current_phase_avg,
 
-        "pressure_level":
-            pressure_level,
+        "pressure_level": pressure_level,
 
-        "rpm":
-            rpm,
+        "rpm": rpm,
 
-        "operating_mode":
-            operating_mode,
+        "operating_mode": operating_mode,
 
         "hours_since_maintenance":
             hours_since_maintenance,
 
-        "ambient_temp":
-            ambient_temp,
+        "ambient_temp": ambient_temp,
 
-        "hour":
-            prediction_dt.hour,
+        "hour": prediction_dt.hour,
 
-        "day":
-            prediction_dt.day,
+        "day": prediction_dt.day,
 
-        "month":
-            prediction_dt.month,
+        "month": prediction_dt.month,
 
         "day_of_week":
             prediction_dt.weekday(),
@@ -1074,27 +1007,24 @@ def prepare_input(
     expected = expected_features()
 
     missing = [
-        x
-        for x in expected
-        if x not in values
+        feature
+        for feature in expected
+        if feature not in values
     ]
 
     if missing:
 
         raise ValueError(
-            "The saved preprocessor expects features "
-            "not supplied by the UI: "
+            "The saved preprocessor expects "
+            "features not supplied by the UI: "
             + str(missing)
         )
-
-    # Critical:
-    # current_phase_avg and pressure_level are included.
 
     return pd.DataFrame(
         [
             [
-                values[x]
-                for x in expected
+                values[feature]
+                for feature in expected
             ]
         ],
         columns=expected,
@@ -1102,45 +1032,37 @@ def prepare_input(
 
 
 # ============================================================
-# PREDICTION ENGINE
+# PREDICTION FUNCTION
 # ============================================================
 
 def prediction(input_df):
 
-    # --------------------------------------------------------
-    # PREPROCESSING
-    # --------------------------------------------------------
+    # ========================================================
+    # PREPROCESS
+    # ========================================================
 
     processed = models[
         "preprocessor"
     ].transform(input_df)
 
+    # ========================================================
+    # FAILURE PROBABILITY
+    # ========================================================
 
-    # --------------------------------------------------------
-    # FAILURE PREDICTION
-    # MLP / KERAS
-    # --------------------------------------------------------
+    failure_model = models["failure"]
 
-    failure_input = processed
-
-    # Keras works more reliably with dense input
-    # if ColumnTransformer produces sparse output.
-
-    if sparse.issparse(failure_input):
-
-        failure_input = failure_input.toarray()
-
-    raw = np.asarray(
-        models["failure"].predict(
-            failure_input,
-            verbose=0,
-        )
+    raw = failure_model.predict(
+        processed,
+        verbose=0,
     )
 
-    if (
-        raw.ndim == 2
-        and raw.shape[1] == 2
-    ):
+    raw = np.asarray(raw)
+
+    # --------------------------------------------------------
+    # Binary probability handling
+    # --------------------------------------------------------
+
+    if raw.ndim == 2 and raw.shape[1] == 2:
 
         probability = float(
             raw[0, 1]
@@ -1160,7 +1082,9 @@ def prediction(input_df):
         )
     )
 
-    # Original threshold preserved.
+    # ========================================================
+    # FAILURE DECISION
+    # ========================================================
 
     failure_decision = (
         "Failure Risk"
@@ -1168,16 +1092,16 @@ def prediction(input_df):
         else "No Failure"
     )
 
-
-    # --------------------------------------------------------
+    # ========================================================
     # FAILURE TYPE
-    # Balanced Extra Trees
-    # --------------------------------------------------------
+    # ========================================================
+
+    raw_type = models[
+        "failure_type"
+    ].predict(processed)
 
     raw_type = np.asarray(
-        models["failure_type"].predict(
-            processed
-        )
+        raw_type
     ).reshape(-1)[0]
 
     if isinstance(
@@ -1201,17 +1125,17 @@ def prediction(input_df):
         .lower()
     )
 
-
-    # --------------------------------------------------------
+    # ========================================================
     # RUL
-    # XGBoost
-    # --------------------------------------------------------
+    # ========================================================
+
+    rul_prediction = models[
+        "rul"
+    ].predict(processed)
 
     rul = float(
         np.asarray(
-            models["rul"].predict(
-                processed
-            )
+            rul_prediction
         ).reshape(-1)[0]
     )
 
@@ -1220,17 +1144,17 @@ def prediction(input_df):
         rul,
     )
 
-
-    # --------------------------------------------------------
+    # ========================================================
     # REPAIR COST
-    # Random Forest
-    # --------------------------------------------------------
+    # ========================================================
+
+    cost_prediction = models[
+        "repair_cost"
+    ].predict(processed)
 
     cost = float(
         np.asarray(
-            models["repair_cost"].predict(
-                processed
-            )
+            cost_prediction
         ).reshape(-1)[0]
     )
 
@@ -1239,11 +1163,9 @@ def prediction(input_df):
         cost,
     )
 
-
-    # --------------------------------------------------------
+    # ========================================================
     # RISK LEVEL
-    # Original thresholds preserved.
-    # --------------------------------------------------------
+    # ========================================================
 
     if probability >= 0.50:
 
@@ -1260,10 +1182,9 @@ def prediction(input_df):
         risk = "Low"
         risk_class = "green"
 
-
-    # --------------------------------------------------------
+    # ========================================================
     # RESULT
-    # --------------------------------------------------------
+    # ========================================================
 
     return {
 
@@ -1274,16 +1195,12 @@ def prediction(input_df):
 
         "machine_id":
             int(
-                input_df.iloc[0][
-                    "machine_id"
-                ]
+                input_df.iloc[0]["machine_id"]
             ),
 
         "machine_type":
             str(
-                input_df.iloc[0][
-                    "machine_type"
-                ]
+                input_df.iloc[0]["machine_type"]
             ),
 
         "failure_probability":
@@ -1375,13 +1292,12 @@ def cards(result):
         ),
     ]
 
-    for col, (
-        icon,
-        label,
-        value,
-        note,
-        color,
-    ) in zip(cols, data):
+    for col, item in zip(
+        cols,
+        data,
+    ):
+
+        icon, label, value, note, color = item
 
         with col:
 
@@ -1454,10 +1370,11 @@ def home():
             </h1>
 
             <p>
-                Intelligent predictive maintenance for smarter
-                machine operations. Predict failure risk,
-                failure type, remaining useful life and
-                estimated repair cost from machine conditions.
+                Intelligent predictive maintenance
+                for smarter machine operations.
+                Predict failure risk, failure type,
+                remaining useful life and estimated
+                repair cost from machine conditions.
             </p>
 
         </div>
@@ -1465,18 +1382,22 @@ def home():
         unsafe_allow_html=True,
     )
 
-    h = st.session_state.history
+    history_data = (
+        st.session_state.history
+    )
 
-    total = len(h)
+    total = len(
+        history_data
+    )
 
     avg_risk = (
         np.mean(
             [
                 x["failure_probability"]
-                for x in h
+                for x in history_data
             ]
         ) * 100
-        if h
+        if history_data
         else 0
     )
 
@@ -1484,21 +1405,21 @@ def home():
         np.mean(
             [
                 x["rul_hours"]
-                for x in h
+                for x in history_data
             ]
         )
-        if h
+        if history_data
         else 0
     )
 
     high = sum(
         x["failure_probability"] >= 0.50
-        for x in h
+        for x in history_data
     )
 
     total_cost = sum(
         x["repair_cost"]
-        for x in h
+        for x in history_data
     )
 
     c1, c2, c3, c4 = st.columns(4)
@@ -1541,8 +1462,9 @@ def home():
             )
 
             st.write(
-                "MaintainIQ converts machine-health "
-                "and operating information into practical "
+                "MaintainIQ converts "
+                "machine-health and operating "
+                "information into practical "
                 "predictive-maintenance insights."
             )
 
@@ -1600,7 +1522,9 @@ def home():
             use_container_width=True,
         ):
 
-            st.session_state.page = "Predictions"
+            st.session_state.page = (
+                "Predictions"
+            )
 
             st.rerun()
 
@@ -1611,7 +1535,9 @@ def home():
             use_container_width=True,
         ):
 
-            st.session_state.page = "Dashboard"
+            st.session_state.page = (
+                "Dashboard"
+            )
 
             st.rerun()
 
@@ -1745,10 +1671,8 @@ def dashboard():
             ],
             title="Top Estimated Repair Costs",
             labels={
-                "machine_id":
-                    "Machine ID",
-                "repair_cost":
-                    "Repair Cost (₹)",
+                "machine_id": "Machine ID",
+                "repair_cost": "Repair Cost (₹)",
             },
         )
 
@@ -1768,16 +1692,12 @@ def dashboard():
 
     view = df.copy()
 
-    view[
-        "Failure Probability"
-    ] = (
+    view["Failure Probability"] = (
         view.failure_probability
         * 100
     ).round(2).astype(str) + "%"
 
-    view[
-        "Failure Type"
-    ] = (
+    view["Failure Type"] = (
         view.failure_type
         .str.replace(
             "_",
@@ -1801,20 +1721,13 @@ def dashboard():
         ]
     ].rename(
         columns={
-            "timestamp":
-                "Time",
-            "machine_id":
-                "Machine ID",
-            "machine_type":
-                "Machine Type",
-            "failure_prediction":
-                "Prediction",
-            "risk_level":
-                "Risk",
-            "rul_hours":
-                "RUL (Hours)",
-            "repair_cost":
-                "Repair Cost (₹)",
+            "timestamp": "Time",
+            "machine_id": "Machine ID",
+            "machine_type": "Machine Type",
+            "failure_prediction": "Prediction",
+            "risk_level": "Risk",
+            "rul_hours": "RUL (Hours)",
+            "repair_cost": "Repair Cost (₹)",
         }
     )
 
@@ -1838,8 +1751,8 @@ def predictions():
 
     st.info(
         "Pipeline: machine inputs → saved preprocessor → "
-        "selected deployment models → risk, type, RUL "
-        "and repair-cost predictions."
+        "selected deployment models → risk, type, RUL and "
+        "repair-cost predictions."
     )
 
     with st.form(
@@ -1889,7 +1802,9 @@ def predictions():
 
             ptime = st.time_input(
                 "Prediction Time",
-                datetime.now().time().replace(
+                datetime.now()
+                .time()
+                .replace(
                     second=0,
                     microsecond=0,
                 ),
@@ -1953,10 +1868,6 @@ def predictions():
             use_container_width=True,
         )
 
-    # --------------------------------------------------------
-    # SUBMITTED
-    # --------------------------------------------------------
-
     if submitted:
 
         dt = datetime.combine(
@@ -2019,16 +1930,16 @@ def predictions():
             if result["risk_level"] == "High":
 
                 text = (
-                    f"Prioritize inspection for the predicted "
+                    "Prioritize inspection for the predicted "
                     f"{result['failure_type'].replace('_', ' ')} "
-                    f"condition."
+                    "condition."
                 )
 
             elif result["risk_level"] == "Moderate":
 
                 text = (
-                    "Continue close monitoring and plan "
-                    "preventive maintenance."
+                    "Continue close monitoring and "
+                    "plan preventive maintenance."
                 )
 
             else:
@@ -2060,10 +1971,6 @@ def predictions():
             )
 
             st.exception(exc)
-
-    # --------------------------------------------------------
-    # LAST PREDICTION
-    # --------------------------------------------------------
 
     elif st.session_state.last_prediction:
 
@@ -2109,6 +2016,7 @@ def history():
         ):
 
             st.session_state.history = []
+
             st.session_state.last_prediction = None
 
             st.rerun()
@@ -2117,28 +2025,28 @@ def history():
 
         st.download_button(
             "⬇️ Export Prediction History",
+
             df.to_csv(
                 index=False
             ).encode("utf-8"),
+
             file_name=(
                 "maintainiq_prediction_history.csv"
             ),
+
             mime="text/csv",
+
             use_container_width=True,
         )
 
     view = df.copy()
 
-    view[
-        "failure_probability"
-    ] = (
+    view["failure_probability"] = (
         view.failure_probability
         * 100
     ).round(2).astype(str) + "%"
 
-    view[
-        "failure_type"
-    ] = (
+    view["failure_type"] = (
         view.failure_type
         .str.replace(
             "_",
@@ -2150,24 +2058,16 @@ def history():
 
     view = view.rename(
         columns={
-            "timestamp":
-                "Time",
-            "machine_id":
-                "Machine ID",
-            "machine_type":
-                "Machine Type",
+            "timestamp": "Time",
+            "machine_id": "Machine ID",
+            "machine_type": "Machine Type",
             "failure_probability":
                 "Failure Probability",
-            "failure_prediction":
-                "Prediction",
-            "failure_type":
-                "Failure Type",
-            "risk_level":
-                "Risk",
-            "rul_hours":
-                "RUL (Hours)",
-            "repair_cost":
-                "Repair Cost (₹)",
+            "failure_prediction": "Prediction",
+            "failure_type": "Failure Type",
+            "risk_level": "Risk",
+            "rul_hours": "RUL (Hours)",
+            "repair_cost": "Repair Cost (₹)",
         }
     )
 
@@ -2243,23 +2143,18 @@ def analytics():
                 "failure_type",
             ],
             color_discrete_map={
-                "Low":
-                    "#10b981",
-                "Moderate":
-                    "#f59e0b",
-                "High":
-                    "#ef4444",
+                "Low": "#10b981",
+                "Moderate": "#f59e0b",
+                "High": "#ef4444",
             },
             title=(
                 "RUL vs Estimated Repair Cost"
             ),
             labels={
-                "rul_hours":
-                    "RUL (hours)",
+                "rul_hours": "RUL (hours)",
                 "repair_cost":
                     "Repair Cost (₹)",
-                "risk_level":
-                    "Risk",
+                "risk_level": "Risk",
             },
         )
 
@@ -2309,9 +2204,9 @@ def analytics():
     )
 
     st.caption(
-        "These charts describe current-session predictions, "
-        "not training/test evaluation. Official metrics are "
-        "shown in Model Performance."
+        "These charts describe current-session "
+        "predictions, not training/test evaluation. "
+        "Official metrics are shown in Model Performance."
     )
 
 
@@ -2322,7 +2217,6 @@ def analytics():
 def comparison(
     filename,
     fallback,
-    selected,
 ):
 
     path = find_file(
@@ -2338,11 +2232,9 @@ def comparison(
             )
 
             if not df.empty:
-
                 return df
 
         except Exception:
-
             pass
 
     return fallback.copy()
@@ -2403,10 +2295,6 @@ def performance():
                 unsafe_allow_html=True,
             )
 
-    # --------------------------------------------------------
-    # FAILURE PREDICTION
-    # --------------------------------------------------------
-
     st.markdown(
         "### 1️⃣ Failure Prediction"
     )
@@ -2415,20 +2303,15 @@ def performance():
         comparison(
             "failure_model_comparison.csv",
             FALLBACKS["failure"],
-            "MLP",
         ),
         use_container_width=True,
         hide_index=True,
     )
 
     st.caption(
-        "Primary metric: F1 Score (higher is better). "
-        "Deployment: MLP."
+        "Primary metric: F1 Score "
+        "(higher is better). Deployment: MLP."
     )
-
-    # --------------------------------------------------------
-    # FAILURE TYPE
-    # --------------------------------------------------------
 
     st.markdown(
         "### 2️⃣ Failure Type Classification"
@@ -2438,20 +2321,16 @@ def performance():
         comparison(
             "failure_type_model_comparison.csv",
             FALLBACKS["failure_type"],
-            "Balanced Extra Trees",
         ),
         use_container_width=True,
         hide_index=True,
     )
 
     st.caption(
-        "Primary metric: Macro F1 (higher is better). "
+        "Primary metric: Macro F1 "
+        "(higher is better). "
         "Deployment: Balanced Extra Trees."
     )
-
-    # --------------------------------------------------------
-    # RUL
-    # --------------------------------------------------------
 
     st.markdown(
         "### 3️⃣ Remaining Useful Life"
@@ -2461,20 +2340,15 @@ def performance():
         comparison(
             "rul_model_comparison.csv",
             FALLBACKS["rul"],
-            "XGBoost",
         ),
         use_container_width=True,
         hide_index=True,
     )
 
     st.caption(
-        "Primary metric: MAE (lower is better). "
-        "Deployment: XGBoost."
+        "Primary metric: MAE "
+        "(lower is better). Deployment: XGBoost."
     )
-
-    # --------------------------------------------------------
-    # REPAIR COST
-    # --------------------------------------------------------
 
     st.markdown(
         "### 4️⃣ Estimated Repair Cost"
@@ -2484,20 +2358,16 @@ def performance():
         comparison(
             "repair_cost_model_comparison.csv",
             FALLBACKS["repair"],
-            "Random Forest",
         ),
         use_container_width=True,
         hide_index=True,
     )
 
     st.caption(
-        "Primary metric: MAE (lower is better). "
+        "Primary metric: MAE "
+        "(lower is better). "
         "Deployment: Random Forest."
     )
-
-    # --------------------------------------------------------
-    # KEY METRICS
-    # --------------------------------------------------------
 
     st.markdown(
         "### 📊 Key Evaluation Metrics"
@@ -2575,15 +2445,12 @@ def performance():
     )
 
     st.info(
-        "Metric choice depends on the task: F1 for failure "
-        "detection, Macro F1 for imbalanced failure-type "
-        "classification, and MAE for RUL/cost regression. "
+        "Metric choice depends on the task: "
+        "F1 for failure detection, Macro F1 for "
+        "imbalanced failure-type classification, "
+        "and MAE for RUL/cost regression. "
         "Accuracy is shown as a supporting metric."
     )
-
-    # --------------------------------------------------------
-    # DEPLOYMENT STACK
-    # --------------------------------------------------------
 
     st.markdown(
         "### 🚀 Deployment Model Stack"
@@ -2631,8 +2498,9 @@ def performance():
     )
 
     st.success(
-        "🏆 These four selected models are the actual models "
-        "used by MaintainIQ predictions. The UI does not retrain models."
+        "🏆 These four selected models are the actual "
+        "models used by MaintainIQ predictions. "
+        "The UI does not retrain models."
     )
 
 
@@ -2684,21 +2552,18 @@ def about():
             )
 
             st.write(
-                "Convert machine telemetry into actionable "
-                "maintenance intelligence so maintenance teams "
-                "can identify risk, understand the likely "
-                "failure mode, estimate remaining machine life "
-                "and prepare an approximate repair budget."
+                "Convert machine telemetry into "
+                "actionable maintenance intelligence "
+                "so maintenance teams can identify risk, "
+                "understand the likely failure mode, "
+                "estimate remaining machine life and "
+                "prepare an approximate repair budget."
             )
 
             st.success(
                 "ML architecture: binary classification + "
                 "multiclass classification + regression + regression."
             )
-
-    # --------------------------------------------------------
-    # DATASET
-    # --------------------------------------------------------
 
     st.markdown(
         "### 📊 Dataset & Features"
@@ -2745,10 +2610,6 @@ def about():
             "imputation/scaling and categorical "
             "imputation/one-hot encoding."
         )
-
-    # --------------------------------------------------------
-    # METHODOLOGY
-    # --------------------------------------------------------
 
     st.markdown(
         "### 🧠 Final ML Methodology"
@@ -2799,10 +2660,6 @@ def about():
         use_container_width=True,
         hide_index=True,
     )
-
-    # --------------------------------------------------------
-    # DEPLOYMENT FLOW
-    # --------------------------------------------------------
 
     st.markdown(
         "### 🚀 Deployment Flow"
@@ -2858,10 +2715,6 @@ def about():
                     text
                 )
 
-    # --------------------------------------------------------
-    # ARTIFACT STATUS
-    # --------------------------------------------------------
-
     st.markdown(
         "### 📦 Deployment Artifacts"
     )
@@ -2896,9 +2749,9 @@ def about():
     )
 
     st.info(
-        "Training and model selection are completed before "
-        "deployment. The Streamlit application loads the saved "
-        "artifacts and performs inference."
+        "Training and model selection are completed "
+        "before deployment. The Streamlit application "
+        "loads the saved artifacts and performs inference."
     )
 
 
@@ -2907,32 +2760,18 @@ def about():
 # ============================================================
 
 PAGES = {
-
-    "Home":
-        home,
-
-    "Dashboard":
-        dashboard,
-
-    "Predictions":
-        predictions,
-
-    "History":
-        history,
-
-    "Analytics":
-        analytics,
-
-    "Model Performance":
-        performance,
-
-    "About":
-        about,
+    "Home": home,
+    "Dashboard": dashboard,
+    "Predictions": predictions,
+    "History": history,
+    "Analytics": analytics,
+    "Model Performance": performance,
+    "About": about,
 }
 
 
 # ============================================================
-# RENDER CURRENT PAGE
+# RUN CURRENT PAGE
 # ============================================================
 
 PAGES.get(
