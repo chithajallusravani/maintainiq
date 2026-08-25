@@ -1,10 +1,8 @@
-streamlit==1.62.0
-numpy==1.26.4
+streamlit==1.50.0
 pandas==2.2.3
+numpy==1.26.4
 scikit-learn==1.6.1
-scipy==1.15.3
 joblib==1.5.3
-xgboost==3.2.0
+plotly==6.3.1
+xgboost==3.0.2
 tensorflow==2.20.0
-h5py==3.16.0
-plotly==6.9.0
