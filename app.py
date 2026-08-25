@@ -179,7 +179,6 @@ def find_file(filename):
 def model_paths():
     return {k: find_file(v) for k, v in MODEL_FILES.items()}
 
-
 @st.cache_resource(show_spinner=False)
 def load_models():
     paths = model_paths()
@@ -187,43 +186,39 @@ def load_models():
     missing = [
         MODEL_FILES[k]
         for k, v in paths.items()
-        if v is None
+        if v is None or not os.path.exists(v)
     ]
 
     if missing:
-        raise FileNotFoundError(
-            "Missing deployment files: " + ", ".join(missing)
+        st.error("❌ Missing deployment files:")
+        for file in missing:
+            st.write(f"- `{file}`")
+
+        st.info(
+            "Upload/commit the required model files to GitHub "
+            "and redeploy the Streamlit app."
         )
 
-    return {
-        "preprocessor": joblib.load(
-            paths["preprocessor"]
-        ),
+        return None
 
-        "failure": tf.keras.models.load_model(
-            paths["failure"],
-            compile=False
-        ),
+    try:
+        models = {}
 
-        "failure_type": joblib.load(
-            paths["failure_type"]
-        ),
+        for key, path in paths.items():
+            models[key] = joblib.load(path)
 
-        "encoder": joblib.load(
-            paths["encoder"]
-        ),
+        return models
 
-        "rul": joblib.load(
-            paths["rul"]
-        ),
+    except Exception as e:
+        st.error("❌ Model loading failed")
+        st.exception(e)
+        return None
 
-        "repair_cost": joblib.load(
-            paths["repair_cost"]
-        ),
 
-        "paths": paths,
-    }
+models = load_models()
 
+if models is None:
+    st.stop()
 
 # ============================================================
 # SESSION
