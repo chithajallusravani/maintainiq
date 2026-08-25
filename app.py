@@ -3,6 +3,7 @@ import os
 # ============================================================
 # RENDER / CPU-ONLY CONFIG
 # ============================================================
+
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
@@ -178,172 +179,491 @@ st.markdown(
     """
 <style>
 
-.stApp{
+/* ============================================================
+   GLOBAL
+   ============================================================ */
+
+.stApp {
     background:
-    radial-gradient(circle at 8% 4%,rgba(59,130,246,.10),transparent 26%),
-    radial-gradient(circle at 92% 2%,rgba(139,92,246,.10),transparent 25%),
-    #f5f7fb;
+        radial-gradient(
+            circle at 5% 5%,
+            rgba(37, 99, 235, 0.08),
+            transparent 25%
+        ),
+        radial-gradient(
+            circle at 95% 5%,
+            rgba(139, 92, 246, 0.08),
+            transparent 25%
+        ),
+        #f5f7fb;
 }
 
-.block-container{
-    max-width:1500px;
-    padding-top:1.2rem;
-    padding-bottom:2rem;
+.block-container {
+    max-width: 1500px;
+    padding-top: 2rem;
+    padding-bottom: 3rem;
 }
 
-[data-testid="stSidebar"]{
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+
+section[data-testid="stSidebar"] {
     background:
-    linear-gradient(
-        180deg,
-        #0b1220 0%,
-        #111b31 52%,
-        #172554 100%
-    );
+        linear-gradient(
+            180deg,
+            #0b1220 0%,
+            #111b31 55%,
+            #172554 100%
+        );
 }
 
-[data-testid="stSidebar"] .stButton>button{
-    width:100%;
-    min-height:43px;
-    border-radius:12px;
-    background:rgba(255,255,255,.035);
-    border:1px solid rgba(255,255,255,.08);
-    color:#e5edff;
-    font-weight:700;
-    text-align:left;
-}
-
-[data-testid="stSidebar"] .stButton>button:hover{
+section[data-testid="stSidebar"] > div {
     background:
-    linear-gradient(
-        90deg,
-        rgba(37,99,235,.30),
-        rgba(124,58,237,.25)
-    );
-    color:white;
+        linear-gradient(
+            180deg,
+            #0b1220 0%,
+            #111b31 55%,
+            #172554 100%
+        );
 }
 
-.page-title{
-    font-size:34px;
-    font-weight:850;
-    color:#10234f;
-    letter-spacing:-1px;
+section[data-testid="stSidebar"] p,
+section[data-testid="stSidebar"] span,
+section[data-testid="stSidebar"] label {
+    color: #e5edff;
 }
 
-.page-subtitle{
-    font-size:15px;
-    color:#64748b;
-    margin-bottom:20px;
+
+/* ============================================================
+   SIDEBAR BUTTONS
+   ============================================================ */
+
+section[data-testid="stSidebar"] .stButton > button {
+    width: 100%;
+    min-height: 44px;
+    border-radius: 12px;
+
+    background: rgba(255,255,255,0.035);
+
+    border: 1px solid rgba(255,255,255,0.08);
+
+    color: #e5edff;
+
+    font-size: 14px;
+    font-weight: 700;
+
+    text-align: left;
+
+    transition: all 0.2s ease;
 }
 
-.hero{
-    padding:30px;
-    border-radius:24px;
-    color:white;
+section[data-testid="stSidebar"] .stButton > button:hover {
     background:
-    linear-gradient(
-        135deg,
-        #2563eb,
-        #4f46e5 55%,
-        #8b5cf6
-    );
-    box-shadow:0 18px 45px rgba(37,99,235,.22);
+        linear-gradient(
+            90deg,
+            rgba(37,99,235,0.35),
+            rgba(124,58,237,0.30)
+        );
+
+    border-color: rgba(147,197,253,0.35);
+
+    color: #ffffff;
+
+    transform: translateX(2px);
 }
 
-.hero h1{
-    margin:0 0 8px;
-    font-size:32px;
+
+/* ============================================================
+   PAGE TITLES
+   ============================================================ */
+
+.page-title {
+    font-size: 34px;
+    font-weight: 800;
+    color: #10234f;
+    letter-spacing: -0.8px;
+    margin-bottom: 4px;
 }
 
-.hero p{
-    margin:0;
-    color:rgba(255,255,255,.90);
-    line-height:1.65;
+.page-subtitle {
+    font-size: 15px;
+    color: #64748b;
+    margin-bottom: 22px;
 }
 
-.card{
-    background:white;
-    border:1px solid #e2e8f0;
-    border-radius:20px;
-    padding:22px;
-    box-shadow:0 8px 28px rgba(15,23,42,.06);
-}
 
-.winner{
-    padding:14px;
-    border-radius:15px;
-    margin-bottom:9px;
-    border:1px solid #dbeafe;
+/* ============================================================
+   HERO
+   ============================================================ */
+
+.hero {
+    padding: 32px;
+    border-radius: 24px;
+    color: white;
+
     background:
-    linear-gradient(
-        135deg,
-        #eff6ff,
-        #f5f3ff
-    );
+        linear-gradient(
+            135deg,
+            #2563eb 0%,
+            #4f46e5 52%,
+            #8b5cf6 100%
+        );
+
+    box-shadow:
+        0 18px 45px rgba(37,99,235,0.22);
+
+    margin-bottom: 24px;
 }
 
-.small{
-    color:#64748b;
-    font-size:12px;
+.hero h1 {
+    margin: 0 0 10px 0;
+    font-size: 32px;
+    font-weight: 800;
 }
 
-.pred{
-    background:white;
-    border:1px solid #e2e8f0;
-    border-radius:20px;
-    padding:20px;
-    min-height:155px;
-    box-shadow:0 8px 25px rgba(15,23,42,.06);
+.hero p {
+    margin: 0;
+    color: rgba(255,255,255,0.92);
+    line-height: 1.7;
+    font-size: 15px;
 }
 
-.pred-icon{
-    font-size:27px;
+
+/* ============================================================
+   GENERAL CARD
+   ============================================================ */
+
+.card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 24px;
+
+    box-shadow:
+        0 8px 28px rgba(15,23,42,0.07);
 }
 
-.pred-label{
-    color:#64748b;
-    font-size:12px;
-    font-weight:800;
-    margin-top:8px;
+
+/* ============================================================
+   WINNER
+   ============================================================ */
+
+.winner {
+    padding: 16px;
+    border-radius: 15px;
+    margin-bottom: 10px;
+
+    border: 1px solid #dbeafe;
+
+    background:
+        linear-gradient(
+            135deg,
+            #eff6ff,
+            #f5f3ff
+        );
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
-.pred-value{
-    color:#0f172a;
-    font-size:25px;
-    font-weight:850;
-    margin-top:4px;
+.winner:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 8px 22px rgba(37,99,235,0.10);
 }
 
-.badge{
-    display:inline-block;
-    margin-top:8px;
-    padding:5px 10px;
-    border-radius:18px;
-    font-size:11px;
-    font-weight:800;
+.small {
+    color: #64748b;
+    font-size: 12px;
 }
 
-.green{
-    background:#d1fae5;
-    color:#047857;
+
+/* ============================================================
+   PREDICTION CARDS
+   ============================================================ */
+
+.pred {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+
+    padding: 22px;
+
+    min-height: 155px;
+
+    box-shadow:
+        0 8px 25px rgba(15,23,42,0.06);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
-.orange{
-    background:#fef3c7;
-    color:#b45309;
+.pred:hover {
+    transform: translateY(-3px);
+
+    box-shadow:
+        0 14px 32px rgba(15,23,42,0.10);
 }
 
-.red{
-    background:#fee2e2;
-    color:#b91c1c;
+.pred-icon {
+    font-size: 28px;
 }
 
-.blue{
-    background:#dbeafe;
-    color:#1d4ed8;
+.pred-label {
+    color: #64748b;
+
+    font-size: 12px;
+    font-weight: 800;
+
+    margin-top: 8px;
+
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
 }
 
-footer{
-    visibility:hidden;
+.pred-value {
+    color: #0f172a;
+
+    font-size: 25px;
+    font-weight: 800;
+
+    margin-top: 5px;
+}
+
+
+/* ============================================================
+   BADGES
+   ============================================================ */
+
+.badge {
+    display: inline-block;
+
+    margin-top: 9px;
+
+    padding: 5px 11px;
+
+    border-radius: 18px;
+
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.green {
+    background: #d1fae5;
+    color: #047857;
+}
+
+.orange {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.red {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.blue {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+
+/* ============================================================
+   STREAMLIT METRICS
+   ============================================================ */
+
+div[data-testid="stMetric"] {
+    background: #ffffff;
+
+    border: 1px solid #e2e8f0;
+
+    border-radius: 18px;
+
+    padding: 18px;
+
+    box-shadow:
+        0 6px 20px rgba(15,23,42,0.05);
+}
+
+div[data-testid="stMetricLabel"] {
+    color: #64748b !important;
+}
+
+div[data-testid="stMetricValue"] {
+    color: #0f172a !important;
+    font-weight: 800;
+}
+
+
+/* ============================================================
+   FORM
+   ============================================================ */
+
+[data-testid="stForm"] {
+    background: #ffffff;
+
+    border: 1px solid #e2e8f0;
+
+    border-radius: 20px;
+
+    padding: 24px;
+
+    box-shadow:
+        0 8px 28px rgba(15,23,42,0.05);
+}
+
+
+/* ============================================================
+   INPUTS
+   ============================================================ */
+
+div[data-baseweb="input"] {
+    border-radius: 10px;
+}
+
+div[data-baseweb="select"] > div {
+    border-radius: 10px;
+}
+
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+
+.stButton > button {
+    border-radius: 12px;
+
+    min-height: 42px;
+
+    font-weight: 700;
+
+    border: 1px solid #dbe3ef;
+
+    background: #ffffff;
+
+    color: #1e293b;
+
+    transition: all 0.2s ease;
+}
+
+.stButton > button:hover {
+    border-color: #93c5fd;
+
+    color: #1d4ed8;
+
+    box-shadow:
+        0 5px 16px rgba(37,99,235,0.10);
+}
+
+.stButton > button[kind="primary"],
+button[kind="primaryFormSubmit"] {
+    border-radius: 12px;
+
+    font-weight: 800;
+
+    border: none;
+
+    background:
+        linear-gradient(
+            135deg,
+            #2563eb,
+            #4f46e5
+        );
+
+    color: white;
+
+    min-height: 44px;
+
+    transition: all 0.2s ease;
+}
+
+.stButton > button[kind="primary"]:hover,
+button[kind="primaryFormSubmit"]:hover {
+    background:
+        linear-gradient(
+            135deg,
+            #1d4ed8,
+            #4338ca
+        );
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 8px 20px rgba(37,99,235,0.25);
+}
+
+
+/* ============================================================
+   DATAFRAME
+   ============================================================ */
+
+div[data-testid="stDataFrame"] {
+    border-radius: 14px;
+
+    overflow: hidden;
+
+    border: 1px solid #e2e8f0;
+}
+
+
+/* ============================================================
+   ALERTS
+   ============================================================ */
+
+div[data-testid="stAlert"] {
+    border-radius: 14px;
+}
+
+
+/* ============================================================
+   EXPANDER
+   ============================================================ */
+
+div[data-testid="stExpander"] {
+    border-radius: 14px;
+
+    border: 1px solid #e2e8f0;
+
+    background: #ffffff;
+}
+
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+
+footer {
+    visibility: hidden;
+}
+
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+
+@media (max-width: 900px) {
+
+    .page-title {
+        font-size: 28px;
+    }
+
+    .hero {
+        padding: 24px;
+    }
+
+    .hero h1 {
+        font-size: 26px;
+    }
+
+    .pred {
+        margin-bottom: 14px;
+    }
 }
 
 </style>
@@ -412,13 +732,17 @@ def load_models():
     if missing:
         raise FileNotFoundError(
             "Missing deployment files:\n"
-            + "\n".join(f"• {x}" for x in missing)
+            + "\n".join(
+                f"• {x}"
+                for x in missing
+            )
         )
 
-    # Import TensorFlow only when actually needed.
     from tensorflow.keras.models import load_model
 
-    preprocessor = joblib.load(paths["preprocessor"])
+    preprocessor = joblib.load(
+        paths["preprocessor"]
+    )
 
     failure_model = load_model(
         paths["failure"],
@@ -470,7 +794,7 @@ for key, value in DEFAULT_SESSION.items():
 
 
 # ============================================================
-# LOGIN
+# LOGIN PAGE
 # ============================================================
 
 def login_page():
@@ -480,7 +804,9 @@ def login_page():
         unsafe_allow_html=True,
     )
 
-    _, center, _ = st.columns([1, 1.15, 1])
+    _, center, _ = st.columns(
+        [1, 1.15, 1]
+    )
 
     with center:
 
@@ -526,7 +852,10 @@ def login_page():
             unsafe_allow_html=True,
         )
 
-        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown(
+            "<br>",
+            unsafe_allow_html=True,
+        )
 
         st.markdown("### 🔐 Sign in")
 
@@ -552,7 +881,8 @@ def login_page():
         ):
 
             if (
-                username.strip().lower() == APP_USERNAME
+                username.strip().lower()
+                == APP_USERNAME
                 and password == APP_PASSWORD
             ):
 
@@ -725,6 +1055,11 @@ with st.sidebar:
             st.session_state.page = label
             st.rerun()
 
+    st.markdown(
+        "<br>",
+        unsafe_allow_html=True,
+    )
+
     if st.button(
         "🚪   Logout",
         key="logout",
@@ -819,7 +1154,6 @@ def expected_features():
                 )
 
     except Exception:
-
         pass
 
     if found:
@@ -850,35 +1184,19 @@ def prepare_input(
 ):
 
     values = {
-
         "machine_id": machine_id,
-
         "machine_type": machine_type,
-
         "vibration_rms": vibration_rms,
-
         "temperature_motor": temperature_motor,
-
         "current_phase_avg": current_phase_avg,
-
         "pressure_level": pressure_level,
-
         "rpm": rpm,
-
         "operating_mode": operating_mode,
-
-        "hours_since_maintenance": (
-            hours_since_maintenance
-        ),
-
+        "hours_since_maintenance": hours_since_maintenance,
         "ambient_temp": ambient_temp,
-
         "hour": prediction_dt.hour,
-
         "day": prediction_dt.day,
-
         "month": prediction_dt.month,
-
         "day_of_week": prediction_dt.weekday(),
     }
 
@@ -1258,9 +1576,7 @@ def home():
         unsafe_allow_html=True,
     )
 
-    history_data = (
-        st.session_state.history
-    )
+    history_data = st.session_state.history
 
     total = len(history_data)
 
@@ -1323,7 +1639,9 @@ def home():
         unsafe_allow_html=True,
     )
 
-    a, b = st.columns([1.3, 1])
+    a, b = st.columns(
+        [1.3, 1]
+    )
 
     with a:
 
@@ -1515,8 +1833,7 @@ def dashboard():
             title="Top Estimated Repair Costs",
             labels={
                 "machine_id": "Machine ID",
-                "repair_cost":
-                    "Repair Cost (₹)",
+                "repair_cost": "Repair Cost (₹)",
             },
         )
 
@@ -1567,12 +1884,10 @@ def dashboard():
             "timestamp": "Time",
             "machine_id": "Machine ID",
             "machine_type": "Machine Type",
-            "failure_prediction":
-                "Prediction",
+            "failure_prediction": "Prediction",
             "risk_level": "Risk",
             "rul_hours": "RUL (Hours)",
-            "repair_cost":
-                "Repair Cost (₹)",
+            "repair_cost": "Repair Cost (₹)",
         }
     )
 
@@ -1983,9 +2298,7 @@ def analytics():
                 "Moderate": "#f59e0b",
                 "High": "#ef4444",
             },
-            title=(
-                "RUL vs Estimated Repair Cost"
-            ),
+            title="RUL vs Estimated Repair Cost",
             labels={
                 "rul_hours": "RUL (hours)",
                 "repair_cost":
@@ -2040,7 +2353,7 @@ def analytics():
 
 
 # ============================================================
-# MODEL PERFORMANCE
+# MODEL COMPARISON
 # ============================================================
 
 def comparison(
@@ -2064,11 +2377,14 @@ def comparison(
                 return df
 
         except Exception:
-
             pass
 
     return fallback.copy()
 
+
+# ============================================================
+# MODEL PERFORMANCE
+# ============================================================
 
 def performance():
 
